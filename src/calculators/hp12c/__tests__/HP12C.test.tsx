@@ -74,7 +74,10 @@ describe('HP 12C UI', () => {
     const user = userEvent.setup()
     render(<HP12C />)
     const annunciator = () => {
-      const span = document.querySelector('.hp12c-display__annunciators span:nth-child(2)')
+      const spans = Array.from(
+        document.querySelectorAll('.hp12c-display__annunciators span'),
+      )
+      const span = spans.find((el) => el.textContent === 'f')
       if (!span) throw new Error('f annunciator not found')
       return span
     }

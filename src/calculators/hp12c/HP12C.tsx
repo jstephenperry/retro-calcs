@@ -77,21 +77,22 @@ export function HP12C() {
 
   return (
     <div className="hp12c" data-testid="hp12c">
-      <div className="hp12c__brand">
-        <span className="hp12c__hp">hp</span>
-        <span className="hp12c__model">12C</span>
-        <span className="hp12c__sub">FINANCIAL CALCULATOR</span>
-      </div>
+      <div className="hp12c__top">
+        <div className="hp12c__brand">
+          <span className="hp12c__hp">hp</span>
+          <span className="hp12c__model">12C</span>
+        </div>
 
-      <Display
-        value={state.stack.x}
-        entry={state.entry}
-        error={state.error}
-        mode={state.display}
-        shift={state.shift}
-        begin={state.fin.begin === 1}
-        prompt={promptText}
-      />
+        <Display
+          value={state.stack.x}
+          entry={state.entry}
+          error={state.error}
+          mode={state.display}
+          shift={state.shift}
+          begin={state.fin.begin === 1}
+          prompt={promptText}
+        />
+      </div>
 
       <div className="hp12c__keypad" role="group" aria-label="HP 12C keypad">
         {ROWS.map((row, ri) => (
@@ -109,6 +110,10 @@ export function HP12C() {
             ))}
           </div>
         ))}
+      </div>
+
+      <div className="hp12c__footer">
+        <span className="hp12c__sub">FINANCIAL CALCULATOR</span>
       </div>
     </div>
   )

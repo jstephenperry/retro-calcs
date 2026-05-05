@@ -1,105 +1,151 @@
 /* HP 12C calculator face.
  *
- * The original HP 12C is landscape, with a brushed-metallic gold body and
- * an LCD display in the top half. The keypad sits below, organized as four
- * rows; ENTER is double-wide and the `f` and `g` shift keys are colored.
+ * The original HP 12C has a darker, saturated "Voyager gold" body, very flat
+ * dark-charcoal keys with white labels, an orange `f` shift key and a blue
+ * `g` shift key, gold f-labels printed on the body BETWEEN rows (not on the
+ * keys), blue g-labels printed on the lower half of each key face, and a
+ * small greenish LCD with a row of micro-annunciators along its bottom edge.
  *
- * This stylesheet renders that face using only CSS — no images — so the
- * UI scales cleanly and stays accessible.
+ * This stylesheet is image-free — every part of the face is drawn with CSS.
  */
 
 :root {
-  --hp-body: #d6c79a;
-  --hp-body-dark: #b8a677;
-  --hp-bezel: #1c1d1f;
-  --hp-key: #2a2c30;
-  --hp-key-light: #3a3d42;
-  --hp-key-text: #f6f5ee;
-  --hp-key-shadow: rgba(0, 0, 0, 0.55);
-  --hp-gold: #d8a13a;
-  --hp-blue: #66a8d6;
-  --hp-lcd-bg: #b9c4ad;
-  --hp-lcd-text: #1a2018;
-  --hp-active: #f4d488;
+  /* The body is a deep, saturated tan-gold. */
+  --hp-body: #9b7e4b;
+  --hp-body-dark: #7e6437;
+  --hp-body-edge: #5a4626;
+
+  /* Keys are a flat dark charcoal with very subtle warmth. */
+  --hp-key: #2a2926;
+  --hp-key-edge: #1a1916;
+  --hp-key-text: #f3efe2;
+
+  /* Shift colors. */
+  --hp-orange: #e08a2a;            /* f key & f-shift labels */
+  --hp-orange-dark: #b86a16;
+  --hp-blue: #6cabd0;              /* g key & g-shift labels */
+  --hp-blue-dark: #3d7ea3;
+
+  /* LCD. */
+  --hp-lcd-bezel: #15140f;
+  --hp-lcd-bg: #94a085;            /* dusty grey-green LCD glass */
+  --hp-lcd-text: #1c1d18;
+  --hp-lcd-dim: #6c7665;
 }
+
+/* Outer body ------------------------------------------------------------- */
 
 .hp12c {
-  --col-width: 48px;
-  --row-gap: 14px;
-  --key-radius: 4px;
+  --col: 50px;
+  --col-gap: 5px;
+  --row-gap: 20px;                 /* tall enough for the f-label between rows */
 
-  background: linear-gradient(180deg, var(--hp-body) 0%, var(--hp-body-dark) 100%);
-  border: 1px solid #6e5d35;
-  border-radius: 14px;
-  padding: 18px 16px 22px;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.5) inset,
-    0 -2px 0 rgba(0, 0, 0, 0.15) inset,
-    0 8px 24px rgba(0, 0, 0, 0.35);
-  color: #2a2418;
   width: max-content;
-  font-family: "Helvetica Neue", Arial, sans-serif;
+  background:
+    linear-gradient(180deg, var(--hp-body) 0%, var(--hp-body-dark) 100%);
+  border: 1px solid var(--hp-body-edge);
+  border-radius: 14px;
+  padding: 16px 18px 12px;
+  color: #1d1810;
+  font-family: "Helvetica Neue", "Arial Narrow", Arial, sans-serif;
   user-select: none;
+  box-shadow:
+    0 1px 0 rgba(255, 230, 180, 0.35) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.20) inset,
+    0 14px 32px rgba(0, 0, 0, 0.50);
 }
 
+/* Top section: brand on the left, LCD on the right --------------------- */
+
+.hp12c__top {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 0 2px 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.20);
+}
 .hp12c__brand {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 0 6px 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
 }
 .hp12c__hp {
-  font-weight: 700;
   font-style: italic;
-  font-size: 28px;
-  letter-spacing: 1px;
-  color: #2a2418;
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: 0.5px;
+  color: #1c160a;
 }
 .hp12c__model {
   font-weight: 700;
-  font-size: 22px;
-  letter-spacing: 1px;
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  color: #1c160a;
+  margin-top: 2px;
+}
+
+/* Bottom band: subtitle ------------------------------------------------- */
+
+.hp12c__footer {
+  text-align: center;
+  padding: 10px 4px 2px;
+  margin-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.20);
 }
 .hp12c__sub {
   font-size: 10px;
-  letter-spacing: 1.5px;
-  color: #4a3e1f;
-  margin-left: 6px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #2a2210;
 }
 
-/* Display ---------------------------------------------------------------- */
+/* LCD -------------------------------------------------------------------- */
 
 .hp12c-display {
-  background: var(--hp-bezel);
-  border-radius: 6px;
-  padding: 8px 14px;
-  margin: 4px 4px 14px;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+  background: var(--hp-lcd-bezel);
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin: 0;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.85),
+    0 1px 0 rgba(255, 230, 180, 0.18);
 }
 .hp12c-display__lcd {
   background: var(--hp-lcd-bg);
   color: var(--hp-lcd-text);
-  border-radius: 3px;
-  padding: 6px 10px 4px;
+  border-radius: 1px;
+  border-top: 1px solid #6c7665;
+  border-left: 1px solid #6c7665;
+  border-right: 1px solid #aebaa0;
+  border-bottom: 1px solid #aebaa0;
+}
+.hp12c-display__line {
   text-align: right;
-  font-family: "DSEG7 Classic", "Menlo", "Consolas", monospace;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  min-height: 32px;
-  border: 1px solid #5a6258;
+  padding: 6px 12px 2px;
+  font-family: "DSEG7 Classic", "Andale Mono", "Menlo", monospace;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  line-height: 1.15;
 }
 .hp12c-display__text { white-space: pre; }
+
+/* Annunciators sit on the LCD glass along its bottom edge — same colour
+ * as the active LCD text but with a dim default and a brighter "on" state. */
 .hp12c-display__annunciators {
   display: flex;
-  justify-content: space-between;
-  font-size: 9px;
+  gap: 10px;
+  font-size: 8px;
+  font-weight: 700;
   letter-spacing: 1.5px;
-  color: #6e6f72;
-  padding: 4px 6px 0;
+  padding: 0 10px 3px;
+  color: var(--hp-lcd-dim);
   text-transform: uppercase;
 }
-.hp12c-display__annunciators .on { color: var(--hp-active); }
+.hp12c-display__annunciators .on { color: var(--hp-lcd-text); }
 
 /* Keypad ----------------------------------------------------------------- */
 
@@ -107,82 +153,116 @@
   display: flex;
   flex-direction: column;
   gap: var(--row-gap);
-  padding: 4px 4px 0;
+  padding: 2px 0 0;
 }
 .hp12c__row {
   display: flex;
-  gap: 6px;
+  gap: var(--col-gap);
 }
 .hp12c-keycell {
-  width: var(--col-width);
+  width: var(--col);
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
-.hp12c-keycell:has(.hp12c-key--wide) { width: calc(var(--col-width) * 2 + 6px); }
+.hp12c-keycell:has(.hp12c-key--wide) {
+  width: calc(var(--col) * 2 + var(--col-gap));
+}
 
+/* The orange f-shift label sits on the gold body BETWEEN rows. */
 .hp12c-key__flabel {
   font-size: 9px;
   font-weight: 700;
-  color: var(--hp-gold);
   text-align: center;
-  letter-spacing: 1px;
-  height: 12px;
-  line-height: 12px;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.6px;
+  color: var(--hp-orange);
+  height: 13px;
+  line-height: 13px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.20);
 }
 
+/* Individual key. Flat, slightly inset, with a single thin highlight on top
+ * and a darker shadow at the bottom edge to suggest a molded chamfer. */
 .hp12c-key {
-  position: relative;
   appearance: none;
   border: none;
   cursor: pointer;
-  background: linear-gradient(180deg, var(--hp-key-light) 0%, var(--hp-key) 100%);
+  background: var(--hp-key);
   color: var(--hp-key-text);
-  border-radius: var(--key-radius);
-  height: 38px;
+  border-radius: 3px;
+  height: 30px;
   width: 100%;
-  padding: 4px 0 2px;
+  padding: 2px 0 1px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   font-family: inherit;
+  position: relative;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.15) inset,
-    0 -2px 0 rgba(0, 0, 0, 0.45) inset,
-    0 2px 3px var(--hp-key-shadow);
+    0 1px 0 rgba(255, 255, 255, 0.10) inset,
+    0 -2px 0 var(--hp-key-edge) inset,
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.45);
   transition: transform 60ms ease-out, box-shadow 60ms ease-out;
 }
 .hp12c-key:active,
 .hp12c-key--active {
   transform: translateY(1px);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.15) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.4) inset,
-    0 1px 1px var(--hp-key-shadow);
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 -1px 0 var(--hp-key-edge) inset,
+    0 1px 1px rgba(0, 0, 0, 0.45);
 }
 .hp12c-key:focus-visible {
-  outline: 2px solid var(--hp-active);
+  outline: 2px solid var(--hp-orange);
   outline-offset: 2px;
 }
+
 .hp12c-key__primary {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  margin-top: 1px;
+  margin-top: 2px;
+  line-height: 1;
 }
 .hp12c-key__glabel {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
+  letter-spacing: 0.5px;
   color: var(--hp-blue);
-  letter-spacing: 1px;
-  height: 11px;
-  line-height: 11px;
+  margin-top: 1px;
+  height: 10px;
+  line-height: 10px;
+  text-transform: uppercase;
 }
-.hp12c-key--gold { background: linear-gradient(180deg, #e8b14d 0%, #c08019 100%); color: #1c1610; }
-.hp12c-key--gold .hp12c-key__glabel { color: #1c1610; }
-.hp12c-key--blue { background: linear-gradient(180deg, #84bce0 0%, #4f88b3 100%); color: #0c1a26; }
-.hp12c-key--blue .hp12c-key__glabel { color: #0c1a26; }
+
+/* The two prefix keys are colored. Their primary letter is dark, sized
+ * a little larger than the rest, and they don't carry a g-label. */
+.hp12c-key--gold {
+  background: linear-gradient(180deg, var(--hp-orange) 0%, var(--hp-orange-dark) 100%);
+  color: #1c1207;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.30) inset,
+    0 -2px 0 #823f00 inset,
+    0 2px 4px rgba(0, 0, 0, 0.45);
+}
+.hp12c-key--gold .hp12c-key__primary { font-size: 18px; font-style: italic; }
+.hp12c-key--gold .hp12c-key__glabel { color: transparent; }
+
+.hp12c-key--blue {
+  background: linear-gradient(180deg, var(--hp-blue) 0%, var(--hp-blue-dark) 100%);
+  color: #061521;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.30) inset,
+    0 -2px 0 #1f4f6f inset,
+    0 2px 4px rgba(0, 0, 0, 0.45);
+}
+.hp12c-key--blue .hp12c-key__primary { font-size: 18px; font-style: italic; }
+.hp12c-key--blue .hp12c-key__glabel { color: transparent; }
+
+/* The wide ENTER key on row 3. */
+.hp12c-key--wide .hp12c-key__primary { letter-spacing: 1px; }
 
 /* Stage ------------------------------------------------------------------ */
 
@@ -192,16 +272,25 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  background: radial-gradient(circle at top, #2c2f33 0%, #16181b 100%);
-  padding: 24px;
+  gap: 18px;
+  background:
+    radial-gradient(circle at 50% 30%, #28282c 0%, #15161a 60%, #0a0b0d 100%);
+  padding: 28px 16px;
 }
 .hp12c-stage h1 {
-  color: #d8a13a;
-  font-family: Georgia, serif;
+  color: var(--hp-orange);
+  font-family: Georgia, "Times New Roman", serif;
   font-weight: 400;
-  font-size: 22px;
-  letter-spacing: 2px;
+  font-size: 20px;
+  letter-spacing: 3px;
   margin: 0;
+  text-transform: uppercase;
 }
-.hp12c-stage p { color: #a09c93; font-size: 12px; max-width: 540px; text-align: center; margin: 0; }
+.hp12c-stage p {
+  color: #807a6b;
+  font-size: 12px;
+  max-width: 560px;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}

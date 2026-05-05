@@ -32,15 +32,19 @@ export function Display(props: Props) {
   return (
     <div className="hp12c-display" data-testid="hp12c-display" role="status" aria-live="polite">
       <div className="hp12c-display__lcd">
-        <span className="hp12c-display__text" data-testid="hp12c-display-text">
-          {text}
-        </span>
-      </div>
-      <div className="hp12c-display__annunciators" aria-hidden="true">
-        <span className={begin ? 'on' : ''}>BEGIN</span>
-        <span className={shift === 'f' ? 'on' : ''}>f</span>
-        <span className={shift === 'g' ? 'on' : ''}>g</span>
-        <span>{mode.kind === 'fix' ? `FIX ${mode.digits}` : `SCI ${mode.digits}`}</span>
+        <div className="hp12c-display__line">
+          <span className="hp12c-display__text" data-testid="hp12c-display-text">
+            {text}
+          </span>
+        </div>
+        <div className="hp12c-display__annunciators" aria-hidden="true">
+          <span className={begin ? 'on' : ''}>BEGIN</span>
+          <span>&nbsp;</span>
+          <span className={shift === 'f' ? 'on' : ''}>f</span>
+          <span className={shift === 'g' ? 'on' : ''}>g</span>
+          <span>&nbsp;</span>
+          <span>{mode.kind === 'fix' ? `FIX ${mode.digits}` : `SCI ${mode.digits}`}</span>
+        </div>
       </div>
     </div>
   )
