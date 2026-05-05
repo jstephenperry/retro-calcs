@@ -97,17 +97,25 @@ export function HP12C() {
       <div className="hp12c__keypad" role="group" aria-label="HP 12C keypad">
         {ROWS.map((row, ri) => (
           <div className="hp12c__row" key={ri}>
-            {row.map((def) => (
-              <Key
-                key={def.id}
-                def={def}
-                onPress={handlePress}
-                highlighted={
-                  (state.shift === 'f' && def.id === 'f') ||
-                  (state.shift === 'g' && def.id === 'g')
-                }
-              />
-            ))}
+            {row.map((def, ci) =>
+              def === null ? (
+                <div
+                  key={`gap-${ri}-${ci}`}
+                  className="hp12c-keycell hp12c-keycell--gap"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Key
+                  key={def.id}
+                  def={def}
+                  onPress={handlePress}
+                  highlighted={
+                    (state.shift === 'f' && def.id === 'f') ||
+                    (state.shift === 'g' && def.id === 'g')
+                  }
+                />
+              ),
+            )}
           </div>
         ))}
       </div>

@@ -168,6 +168,9 @@
 .hp12c-keycell:has(.hp12c-key--wide) {
   width: calc(var(--col) * 2 + var(--col-gap));
 }
+/* Empty column slot. Reserves the same width as a key so that 0/1/4/7
+ * align in a vertical column, matching the real 12C face. */
+.hp12c-keycell--gap { width: var(--col); }
 
 /* The orange f-shift label sits on the gold body BETWEEN rows. */
 .hp12c-key__flabel {

@@ -29,6 +29,7 @@ describe('HP 12C UI', () => {
     expect(displayText()).toBe('0.00')
   })
 
+
   test('typing 1 2 3 . 4 5 shows the live entry buffer', async () => {
     const user = userEvent.setup()
     render(<HP12C />)
