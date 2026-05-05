@@ -141,6 +141,33 @@ describe('HP 12C engine: financial', () => {
     expect(s.stack.x).toBeCloseTo(0.5, 12)
   })
 
+  test('bare PMT after a TVM setup chain solves; bare PMT after a digit stores', () => {
+    // Reproduces the user-reported workflow: 30 g 12× / 4.25 g 12÷ /
+    // 325000 PV / 0 FV / PMT. The final PMT press has no fresh entry,
+    // so it must compute, not store.
+    const s = run(
+      ...digits('30'),     { type: 'STORE_FIN_SCALED', key: 'n', factor: 12 },
+      ...digits('4.25'),   { type: 'STORE_FIN_SCALED', key: 'i', factor: 1 / 12 },
+      ...digits('325000'), { type: 'FIN', key: 'pv' },
+      ...digits('0'),      { type: 'FIN', key: 'fv' },
+      { type: 'FIN', key: 'pmt' },
+    )
+    expect(s.error).toBeNull()
+    // 325k at 4.25% APR over 30 years; sign is negative because PV was
+    // entered positive (the user pays, the lender receives).
+    expect(s.stack.x).toBeCloseTo(-1598.80, 2)
+    expect(s.fin.pmt).toBeCloseTo(-1598.80, 2)
+  })
+
+  test('bare PMT immediately after a digit stores X into PMT', () => {
+    const s = run(
+      ...digits('123'),
+      { type: 'FIN', key: 'pmt' },
+    )
+    expect(s.fin.pmt).toBe(123)
+    expect(s.error).toBeNull()
+  })
+
   test('mortgage payment via STORE_FIN/SOLVE_FIN', () => {
     const s = run(
       ...digits('360'), { type: 'STORE_FIN', key: 'n' },

@@ -119,6 +119,17 @@ describe('HP 12C UI', () => {
     expect(displayText()).toBe('0.50')
   })
 
+  test('full mortgage via the keypad: 30 g 12× / 4.25 g 12÷ / 325000 PV / 0 FV / PMT', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D3', 'D0', 'g', 'n')           // n = 360
+    await press(user, 'D4', 'dot', 'D2', 'D5', 'g', 'i') // i ≈ 0.354
+    await press(user, 'D3', 'D2', 'D5', 'D0', 'D0', 'D0', 'PV') // PV = 325,000
+    await press(user, 'D0', 'FV')                      // FV = 0
+    await press(user, 'PMT')                           // solves PMT
+    expect(displayText()).toBe('-1,598.80')
+  })
+
   test('division by zero shows Error 0', async () => {
     const user = userEvent.setup()
     render(<HP12C />)

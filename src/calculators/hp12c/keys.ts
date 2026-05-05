@@ -40,19 +40,23 @@ export interface KeyDef {
 
 const digit = (n: Digit): Action => ({ type: 'DIGIT', d: n })
 
-const fin = (key: FinKey): { store: Action; solve: Action } => ({
-  store: { type: 'STORE_FIN', key },
+// Bare TVM key actions use `FIN` so the engine can disambiguate "store the
+// fresh X" from "solve for this register". The g-shift on PV/PMT/FV is
+// kept as an explicit SOLVE so users can force a compute even after a
+// digit entry.
+const finKey = (key: FinKey): { bare: Action; solve: Action } => ({
+  bare:  { type: 'FIN', key },
   solve: { type: 'SOLVE_FIN', key },
 })
 
 // Layout rows, each row is a list of keys left-to-right.
 export const ROWS: KeyDef[][] = [
   [
-    { id: 'n',   primary: 'n',   fLabel: 'AMORT', gLabel: '12×',  action: fin('n').store,   gAction: { type: 'STORE_FIN_SCALED', key: 'n', factor: 12 } },
-    { id: 'i',   primary: 'i',   fLabel: 'INT',   gLabel: '12÷',  action: fin('i').store,   gAction: { type: 'STORE_FIN_SCALED', key: 'i', factor: 1 / 12 } },
-    { id: 'PV',  primary: 'PV',  fLabel: 'NPV',   gLabel: 'CFo',  action: fin('pv').store,  gAction: { type: 'SOLVE_FIN', key: 'pv' } },
-    { id: 'PMT', primary: 'PMT', fLabel: 'RND',   gLabel: 'CFj',  action: fin('pmt').store, gAction: { type: 'SOLVE_FIN', key: 'pmt' } },
-    { id: 'FV',  primary: 'FV',  fLabel: 'IRR',   gLabel: 'Nj',   action: fin('fv').store,  gAction: { type: 'SOLVE_FIN', key: 'fv' } },
+    { id: 'n',   primary: 'n',   fLabel: 'AMORT', gLabel: '12×',  action: finKey('n').bare,   gAction: { type: 'STORE_FIN_SCALED', key: 'n', factor: 12 } },
+    { id: 'i',   primary: 'i',   fLabel: 'INT',   gLabel: '12÷',  action: finKey('i').bare,   gAction: { type: 'STORE_FIN_SCALED', key: 'i', factor: 1 / 12 } },
+    { id: 'PV',  primary: 'PV',  fLabel: 'NPV',   gLabel: 'CFo',  action: finKey('pv').bare,  gAction: finKey('pv').solve },
+    { id: 'PMT', primary: 'PMT', fLabel: 'RND',   gLabel: 'CFj',  action: finKey('pmt').bare, gAction: finKey('pmt').solve },
+    { id: 'FV',  primary: 'FV',  fLabel: 'IRR',   gLabel: 'Nj',   action: finKey('fv').bare,  gAction: finKey('fv').solve },
     { id: 'CHS', primary: 'CHS', fLabel: 'RPN',   gLabel: 'DATE', action: { type: 'CHS' } },
     { id: 'D7',  primary: '7',   fLabel: 'BEG',   gLabel: 'D.MY', action: digit('7'), fAction: { type: 'BEGIN' } },
     { id: 'D8',  primary: '8',   fLabel: 'END',   gLabel: 'M.DY', action: digit('8'), fAction: { type: 'END' } },

@@ -46,12 +46,20 @@ export type Action =
   | { type: 'STORE_FIN'; key: FinKey }
   | { type: 'STORE_FIN_SCALED'; key: FinKey; factor: number }
   | { type: 'SOLVE_FIN'; key: FinKey }
+  /** Smart bare-press of a TVM key: stores X if the user just keyed in
+   *  a value, otherwise solves for the named register. Mirrors the real
+   *  HP 12C, where the same physical key both stores and computes. */
+  | { type: 'FIN'; key: FinKey }
   | { type: 'CLEAR_FIN' }
   | { type: 'CLEAR_REG' }
 
 /** Internal state — stable shape across HP calculators in this repo. */
 export interface InternalState extends CalcState {
   liftEnabled: boolean
+  /** True when the immediately previous action was a TVM store/solve.
+   *  Used by the `FIN` action to disambiguate "store X here" from
+   *  "compute the value of this register". */
+  lastWasTvm: boolean
 }
 
 export const INITIAL_STATE: InternalState = {
@@ -63,6 +71,7 @@ export const INITIAL_STATE: InternalState = {
   entry: null,
   error: null,
   liftEnabled: false,
+  lastWasTvm: false,
 }
 
 export function isEditing(s: InternalState): boolean {
@@ -198,7 +207,24 @@ function solveFin(state: InternalState, key: FinKey): InternalState {
   }
 }
 
+/** Action types that should leave `lastWasTvm` unchanged (purely modal,
+ *  don't touch X or the registers). */
+const NEUTRAL_ACTIONS: ReadonlySet<Action['type']> = new Set([
+  'SHIFT', 'FIX', 'SCI', 'BEGIN', 'END',
+])
+/** Action types that mark the next bare TVM key as a "compute" press. */
+const TVM_ACTIONS: ReadonlySet<Action['type']> = new Set([
+  'STORE_FIN', 'STORE_FIN_SCALED', 'SOLVE_FIN', 'FIN',
+])
+
 export function reduce(state: InternalState, action: Action): InternalState {
+  const next = reduceImpl(state, action)
+  if (NEUTRAL_ACTIONS.has(action.type)) return next
+  if (TVM_ACTIONS.has(action.type)) return { ...next, lastWasTvm: true }
+  return { ...next, lastWasTvm: false }
+}
+
+function reduceImpl(state: InternalState, action: Action): InternalState {
   // Any keypress clears a sticky error.
   const s = state.error ? { ...state, error: null } : state
 
@@ -297,6 +323,13 @@ export function reduce(state: InternalState, action: Action): InternalState {
       }
     }
     case 'SOLVE_FIN': return solveFin(s, action.key)
+    case 'FIN': {
+      // Smart routing: if the user has a fresh value in X (no prior TVM
+      // press, or an entry buffer in progress), treat this press as
+      // STORE; otherwise compute the named register.
+      if (s.lastWasTvm && s.entry === null) return solveFin(s, action.key)
+      return storeFin(s, action.key)
+    }
     case 'CLEAR_FIN': return { ...withFin(s, { n: 0, i: 0, pv: 0, pmt: 0, fv: 0 }), shift: null }
     case 'CLEAR_REG': return { ...s, mem: new Array<number>(s.mem.length).fill(0), shift: null }
   }
