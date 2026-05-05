@@ -1,0 +1,10 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #16181b;
+  color: #e9e6dc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+button { font-family: inherit; }
