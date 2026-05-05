@@ -119,6 +119,28 @@ describe('HP 12C engine: percentages', () => {
 })
 
 describe('HP 12C engine: financial', () => {
+  test('g-shifted 12× on n multiplies X by 12 and stores in n', () => {
+    // "30 g 12×" — convert 30 years to 360 months and store as n.
+    const s = run(
+      ...digits('30'),
+      { type: 'STORE_FIN_SCALED', key: 'n', factor: 12 },
+    )
+    expect(s.error).toBeNull()
+    expect(s.fin.n).toBe(360)
+    expect(s.stack.x).toBe(360)
+  })
+
+  test('g-shifted 12÷ on i divides X by 12 and stores in i', () => {
+    // "6 g 12÷" — convert 6% APR to 0.5% per period and store as i.
+    const s = run(
+      ...digits('6'),
+      { type: 'STORE_FIN_SCALED', key: 'i', factor: 1 / 12 },
+    )
+    expect(s.error).toBeNull()
+    expect(s.fin.i).toBeCloseTo(0.5, 12)
+    expect(s.stack.x).toBeCloseTo(0.5, 12)
+  })
+
   test('mortgage payment via STORE_FIN/SOLVE_FIN', () => {
     const s = run(
       ...digits('360'), { type: 'STORE_FIN', key: 'n' },

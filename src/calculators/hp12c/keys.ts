@@ -48,8 +48,8 @@ const fin = (key: FinKey): { store: Action; solve: Action } => ({
 // Layout rows, each row is a list of keys left-to-right.
 export const ROWS: KeyDef[][] = [
   [
-    { id: 'n',   primary: 'n',   fLabel: 'AMORT', gLabel: '12×',  action: fin('n').store,   gAction: { type: 'SOLVE_FIN', key: 'n' } },
-    { id: 'i',   primary: 'i',   fLabel: 'INT',   gLabel: '12÷',  action: fin('i').store,   gAction: { type: 'SOLVE_FIN', key: 'i' } },
+    { id: 'n',   primary: 'n',   fLabel: 'AMORT', gLabel: '12×',  action: fin('n').store,   gAction: { type: 'STORE_FIN_SCALED', key: 'n', factor: 12 } },
+    { id: 'i',   primary: 'i',   fLabel: 'INT',   gLabel: '12÷',  action: fin('i').store,   gAction: { type: 'STORE_FIN_SCALED', key: 'i', factor: 1 / 12 } },
     { id: 'PV',  primary: 'PV',  fLabel: 'NPV',   gLabel: 'CFo',  action: fin('pv').store,  gAction: { type: 'SOLVE_FIN', key: 'pv' } },
     { id: 'PMT', primary: 'PMT', fLabel: 'RND',   gLabel: 'CFj',  action: fin('pmt').store, gAction: { type: 'SOLVE_FIN', key: 'pmt' } },
     { id: 'FV',  primary: 'FV',  fLabel: 'IRR',   gLabel: 'Nj',   action: fin('fv').store,  gAction: { type: 'SOLVE_FIN', key: 'fv' } },

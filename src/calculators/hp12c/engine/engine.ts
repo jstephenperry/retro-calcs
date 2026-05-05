@@ -44,6 +44,7 @@ export type Action =
   | { type: 'STO'; reg: number }
   | { type: 'RCL'; reg: number }
   | { type: 'STORE_FIN'; key: FinKey }
+  | { type: 'STORE_FIN_SCALED'; key: FinKey; factor: number }
   | { type: 'SOLVE_FIN'; key: FinKey }
   | { type: 'CLEAR_FIN' }
   | { type: 'CLEAR_REG' }
@@ -279,6 +280,22 @@ export function reduce(state: InternalState, action: Action): InternalState {
     }
 
     case 'STORE_FIN': return storeFin(s, action.key)
+    case 'STORE_FIN_SCALED': {
+      // Convenience operator (g-shift on `n` and `i`): multiply X by the
+      // scale factor and store the result in the named register, leaving
+      // the scaled value in X. The HP 12C uses this to convert years↔months
+      // and APR↔periodic-rate without an explicit multiply step.
+      const c = commit(s)
+      if (c.error) return c
+      const value = c.stack.x * action.factor
+      if (!Number.isFinite(value)) return withError(c, 'Error 0')
+      return {
+        ...withFin(c, { [action.key]: value }),
+        stack: replaceX(c.stack, value),
+        shift: null,
+        liftEnabled: true,
+      }
+    }
     case 'SOLVE_FIN': return solveFin(s, action.key)
     case 'CLEAR_FIN': return { ...withFin(s, { n: 0, i: 0, pv: 0, pmt: 0, fv: 0 }), shift: null }
     case 'CLEAR_REG': return { ...s, mem: new Array<number>(s.mem.length).fill(0), shift: null }

@@ -105,6 +105,20 @@ describe('HP 12C UI', () => {
     expect(displayText()).toBe('1,199.10')
   })
 
+  test('"30 g 12×" produces 360.00 (years → months convenience)', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D3', 'D0', 'g', 'n')
+    expect(displayText()).toBe('360.00')
+  })
+
+  test('"6 g 12÷" produces 0.50 (APR → periodic rate convenience)', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D6', 'g', 'i')
+    expect(displayText()).toBe('0.50')
+  })
+
   test('division by zero shows Error 0', async () => {
     const user = userEvent.setup()
     render(<HP12C />)
