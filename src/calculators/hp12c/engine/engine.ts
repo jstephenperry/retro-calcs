@@ -43,6 +43,10 @@ export type Action =
   | { type: 'END' }
   | { type: 'STO'; reg: number }
   | { type: 'RCL'; reg: number }
+  /** RCL followed by a TVM key — recall the register's value into X
+   *  without storing or solving. The 12C uses this to inspect a stored
+   *  TVM register. */
+  | { type: 'RCL_FIN'; key: FinKey }
   | { type: 'STORE_FIN'; key: FinKey }
   | { type: 'STORE_FIN_SCALED'; key: FinKey; factor: number }
   | { type: 'SOLVE_FIN'; key: FinKey }
@@ -189,7 +193,14 @@ function solveFin(state: InternalState, key: FinKey): InternalState {
     const f = s.fin
     let result: number
     switch (key) {
-      case 'n':   result = solveN({ i: f.i, pv: f.pv, pmt: f.pmt, fv: f.fv, mode: f.begin }); break
+      case 'n': {
+        // The HP 12C rounds n up to the next whole period after solving,
+        // because n must be an integer number of compounding periods.
+        // Tolerance avoids 359.99999… → 360 → ceil → 361 from FP noise.
+        const raw = solveN({ i: f.i, pv: f.pv, pmt: f.pmt, fv: f.fv, mode: f.begin })
+        result = Math.ceil(raw - 1e-9)
+        break
+      }
       case 'i':   result = solveI({ n: f.n, pv: f.pv, pmt: f.pmt, fv: f.fv, mode: f.begin }); break
       case 'pv':  result = solvePV({ n: f.n, i: f.i, pmt: f.pmt, fv: f.fv, mode: f.begin }); break
       case 'pmt': result = solvePMT({ n: f.n, i: f.i, pv: f.pv, fv: f.fv, mode: f.begin }); break
@@ -302,6 +313,12 @@ function reduceImpl(state: InternalState, action: Action): InternalState {
       const c = commit(s)
       if (action.reg < 0 || action.reg >= c.mem.length) return withError(c, 'Error 3')
       const stack = c.liftEnabled ? lift(c.stack, c.mem[action.reg]) : { ...c.stack, x: c.mem[action.reg] }
+      return { ...c, stack, shift: null, liftEnabled: true }
+    }
+    case 'RCL_FIN': {
+      const c = commit(s)
+      const value = c.fin[action.key]
+      const stack = c.liftEnabled ? lift(c.stack, value) : { ...c.stack, x: value }
       return { ...c, stack, shift: null, liftEnabled: true }
     }
 

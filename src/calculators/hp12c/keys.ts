@@ -58,8 +58,11 @@ export const ROWS: KeyDef[][] = [
     { id: 'PMT', primary: 'PMT', fLabel: 'RND',   gLabel: 'CFj',  action: finKey('pmt').bare, gAction: finKey('pmt').solve },
     { id: 'FV',  primary: 'FV',  fLabel: 'IRR',   gLabel: 'Nj',   action: finKey('fv').bare,  gAction: finKey('fv').solve },
     { id: 'CHS', primary: 'CHS', fLabel: 'RPN',   gLabel: 'DATE', action: { type: 'CHS' } },
-    { id: 'D7',  primary: '7',   fLabel: 'BEG',   gLabel: 'D.MY', action: digit('7'), fAction: { type: 'BEGIN' } },
-    { id: 'D8',  primary: '8',   fLabel: 'END',   gLabel: 'M.DY', action: digit('8'), fAction: { type: 'END' } },
+    // BEG and END are g-shifted on the original HP 12C (blue labels on the
+    // key face); pressing `g 7` enters annuity-due mode, `g 8` returns to
+    // ordinary annuity. The f-shift on every digit just selects FIX n.
+    { id: 'D7',  primary: '7',   fLabel: '',      gLabel: 'BEG',  action: digit('7'), gAction: { type: 'BEGIN' } },
+    { id: 'D8',  primary: '8',   fLabel: '',      gLabel: 'END',  action: digit('8'), gAction: { type: 'END' } },
     { id: 'D9',  primary: '9',   fLabel: 'MEM',   gLabel: 'CFLO', action: digit('9') },
     { id: 'div', primary: '÷',   fLabel: '',      gLabel: '',     action: { type: 'DIV' } },
   ],
@@ -70,15 +73,20 @@ export const ROWS: KeyDef[][] = [
     { id: 'pctDelta', primary: 'Δ%',  fLabel: '',      gLabel: 'x̂,r',  action: { type: 'PCT_DELTA' } },
     { id: 'pct',      primary: '%',   fLabel: '',      gLabel: 'x̂y,r', action: { type: 'PCT' } },
     { id: 'EEX',      primary: 'EEX', fLabel: '',      gLabel: '',     action: { type: 'EEX' } },
-    { id: 'D4',       primary: '4',   fLabel: 'D.MY',  gLabel: '',     action: digit('4') },
-    { id: 'D5',       primary: '5',   fLabel: 'M.DY',  gLabel: 'DYS',  action: digit('5') },
+    // Date-format labels are g-shifted on the real 12C; we render the
+    // labels for fidelity even though calendar functions aren't yet
+    // implemented in this engine.
+    { id: 'D4',       primary: '4',   fLabel: '',      gLabel: 'D.MY', action: digit('4') },
+    { id: 'D5',       primary: '5',   fLabel: '',      gLabel: 'M.DY', action: digit('5') },
     { id: 'D6',       primary: '6',   fLabel: '',      gLabel: '',     action: digit('6') },
     { id: 'mul',      primary: '×',   fLabel: '',      gLabel: 'x²',   action: { type: 'MUL' } },
   ],
   [
     { id: 'Rdown', primary: 'R↓',    fLabel: 'PRGM',  gLabel: 'PR',    action: { type: 'ROLL_DOWN' } },
-    { id: 'swap',  primary: 'x↔y',   fLabel: 'FIN',   gLabel: 'REG',   action: { type: 'SWAP' } },
-    { id: 'CLx',   primary: 'CLx',   fLabel: 'PREFIX',gLabel: 'CLΣ',   action: { type: 'CLX' } },
+    // f x↔y clears all five financial registers (n, i, PV, PMT, FV).
+    { id: 'swap',  primary: 'x↔y',   fLabel: 'FIN',   gLabel: 'REG',   action: { type: 'SWAP' }, fAction: { type: 'CLEAR_FIN' } },
+    // f CLx is "CLEAR PREFIX" — cancel a pending shift without touching X.
+    { id: 'CLx',   primary: 'CLx',   fLabel: 'PREFIX',gLabel: 'CLΣ',   action: { type: 'CLX' }, fAction: { type: 'SHIFT', shift: null } },
     { id: 'ENTER', primary: 'ENTER', fLabel: '',      gLabel: 'LSTx',  wide: true, action: { type: 'ENTER' }, gAction: { type: 'LSTX' } },
     { id: 'D1',    primary: '1',     fLabel: '',      gLabel: 'x≤y',   action: digit('1') },
     { id: 'D2',    primary: '2',     fLabel: '',      gLabel: 'x=0',   action: digit('2') },

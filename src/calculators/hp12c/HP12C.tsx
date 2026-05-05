@@ -3,9 +3,19 @@ import { Display } from './Display'
 import { Key } from './Key'
 import { ROWS, type KeyDef } from './keys'
 import { INITIAL_STATE, reduce, type Action } from './engine/engine'
+import type { FinKey } from './engine/engine'
 import './HP12C.css'
 
 type Pending = null | 'STO' | 'RCL'
+
+/** Map from a key id to the financial-register name it represents. */
+const TVM_KEY_TO_FIN: Partial<Record<string, FinKey>> = {
+  n: 'n',
+  i: 'i',
+  PV: 'pv',
+  PMT: 'pmt',
+  FV: 'fv',
+}
 
 /**
  * The HP 12C calculator face. It owns the engine state and the small bit
@@ -20,30 +30,43 @@ export function HP12C() {
   const [pending, setPending] = useState<Pending>(null)
 
   const handlePress = (def: KeyDef) => {
-    // STO/RCL prompt for a register number on the next key press.
+    // STO/RCL prompt for a register on the next key press.
     if (def.id === 'STO') { setPending('STO'); return }
     if (def.id === 'RCL') { setPending('RCL'); return }
 
-    if (pending && /^D[0-9]$/.test(def.id)) {
-      const reg = Number(def.id.slice(1))
-      dispatch({ type: pending, reg } as Action)
-      setPending(null)
-      return
-    }
     if (pending) {
-      // Cancel the pending prompt on any non-digit press.
+      // RCL/STO followed by a digit → numbered register (R0..R9).
+      if (/^D[0-9]$/.test(def.id)) {
+        const reg = Number(def.id.slice(1))
+        dispatch({ type: pending, reg } as Action)
+        setPending(null)
+        return
+      }
+      // RCL/STO followed by a TVM key → financial register.
+      const finKey = TVM_KEY_TO_FIN[def.id]
+      if (finKey) {
+        if (pending === 'RCL') dispatch({ type: 'RCL_FIN', key: finKey })
+        else dispatch({ type: 'STORE_FIN', key: finKey })
+        setPending(null)
+        return
+      }
+      // Anything else cancels the prompt and re-dispatches as a normal press.
       setPending(null)
     }
 
-    // Pick action based on the current shift state.
+    // Resolve the action, honoring the f/g shift state. The HP 12C uses
+    // `f` + digit as FIX n only when the digit key has no specific
+    // f-shifted function — otherwise the per-key fAction wins (e.g.
+    // f-shifted `9` is MEM, not FIX 9).
     let action: Action | undefined
-    if (state.shift === 'f' && def.fAction) action = def.fAction
-    else if (state.shift === 'g' && def.gAction) action = def.gAction
-    else action = def.action
-
-    // `f` followed by a digit sets FIX precision (HP convention).
-    if (state.shift === 'f' && /^D[0-9]$/.test(def.id)) {
-      action = { type: 'FIX', digits: Number(def.id.slice(1)) }
+    if (state.shift === 'f') {
+      if (def.fAction) action = def.fAction
+      else if (/^D[0-9]$/.test(def.id)) action = { type: 'FIX', digits: Number(def.id.slice(1)) }
+      else action = def.action
+    } else if (state.shift === 'g') {
+      action = def.gAction ?? def.action
+    } else {
+      action = def.action
     }
 
     if (action) dispatch(action)

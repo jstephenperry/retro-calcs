@@ -137,3 +137,146 @@ describe('HP 12C UI', () => {
     expect(displayText()).toBe('Error 0')
   })
 })
+
+// Every entry-point a real HP 12C user actually reaches for, exercised
+// end-to-end through the keypad. Each test mirrors a canonical scenario:
+// loan PMT, savings goal, given-PMT solve-i, savings FV, max loan PV,
+// BEGIN-mode lease, plus the supporting hot keys (CLEAR FIN, RCL TVM,
+// CLEAR PREFIX, mode toggles).
+describe('HP 12C TVM hot paths via the keypad', () => {
+  test('A. solve PMT — 30-yr mortgage at $325k, 4.25% APR → -1,598.80', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D3', 'D0', 'g', 'n')                       // 30 g 12× → n=360
+    await press(user, 'D4', 'dot', 'D2', 'D5', 'g', 'i')          // 4.25 g 12÷ → i
+    await press(user, 'D3', 'D2', 'D5', 'D0', 'D0', 'D0', 'PV')   // 325000 PV
+    await press(user, 'D0', 'FV')                                  // 0 FV
+    await press(user, 'PMT')                                       // solve PMT
+    expect(displayText()).toBe('-1,598.80')
+  })
+
+  test('B. solve N — months of $-100/period at 0.5% to reach $50k → 252', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D1', 'D0', 'D0', 'CHS', 'PMT')              // -100 PMT
+    await press(user, 'dot', 'D5', 'i')                            // 0.5 i
+    await press(user, 'D5', 'D0', 'D0', 'D0', 'D0', 'FV')          // 50000 FV
+    await press(user, 'D0', 'PV')                                   // 0 PV
+    await press(user, 'n')                                          // solve n
+    // n is rounded UP on the real HP 12C since periods are integers.
+    expect(displayText()).toBe('252.00')
+  })
+
+  test('C. solve i — $10k loan, 60 months of $-200 → 0.62% per period', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D6', 'D0', 'n')                              // 60 n
+    await press(user, 'D1', 'D0', 'D0', 'D0', 'D0', 'PV')           // 10000 PV
+    await press(user, 'D2', 'D0', 'D0', 'CHS', 'PMT')               // -200 PMT
+    await press(user, 'D0', 'FV')                                   // 0 FV
+    await press(user, 'i')                                          // solve i
+    expect(displayText()).toBe('0.62')
+  })
+
+  test('D. solve FV — $-100/month for 360 months at 0.5% → $100,451.50', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D3', 'D6', 'D0', 'n')                        // 360 n
+    await press(user, 'dot', 'D5', 'i')                             // 0.5 i
+    await press(user, 'D0', 'PV')                                   // 0 PV
+    await press(user, 'D1', 'D0', 'D0', 'CHS', 'PMT')               // -100 PMT
+    await press(user, 'FV')                                         // solve FV
+    expect(displayText()).toBe('100,451.50')
+  })
+
+  test('E. solve PV — 240 months of $1,500 PMT at 0.5% → -$209,371.16', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D2', 'D4', 'D0', 'n')                        // 240 n
+    await press(user, 'dot', 'D5', 'i')                             // 0.5 i
+    await press(user, 'D1', 'D5', 'D0', 'D0', 'PMT')                // 1500 PMT
+    await press(user, 'D0', 'FV')                                    // 0 FV
+    await press(user, 'PV')                                          // solve PV
+    expect(displayText()).toBe('-209,371.16')
+  })
+
+  test('F. BEGIN-mode lease — $30k cap, 4% APR, $15k residual, 36mo → -$491.22', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'g', 'D7')                                     // g BEG
+    await press(user, 'D3', 'D6', 'n')                               // 36 n
+    await press(user, 'D4', 'g', 'i')                                // 4 g 12÷ → i
+    await press(user, 'D3', 'D0', 'D0', 'D0', 'D0', 'PV')            // 30000 PV
+    await press(user, 'D1', 'D5', 'D0', 'D0', 'D0', 'CHS', 'FV')     // -15000 FV
+    await press(user, 'PMT')                                         // solve PMT
+    expect(displayText()).toBe('-491.22')
+  })
+
+  test('g BEG turns the BEGIN annunciator on; g END turns it off', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    const beginAnnunciator = () => {
+      const span = document.querySelector('.hp12c-display__annunciators span:first-child')
+      if (!span) throw new Error('BEGIN annunciator not found')
+      return span
+    }
+    expect(beginAnnunciator()).not.toHaveClass('on')
+    await press(user, 'g', 'D7')
+    expect(beginAnnunciator()).toHaveClass('on')
+    await press(user, 'g', 'D8')
+    expect(beginAnnunciator()).not.toHaveClass('on')
+  })
+
+  test('f CLEAR FIN (f x↔y) zeroes all five financial registers', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    // Set up arbitrary TVM values.
+    await press(user, 'D3', 'D6', 'D0', 'n')
+    await press(user, 'dot', 'D5', 'i')
+    await press(user, 'D1', 'D0', 'D0', 'D0', 'D0', 'D0', 'PV')
+    // Now wipe.
+    await press(user, 'f', 'swap')
+    // Recall each register; all should read 0.00.
+    await press(user, 'RCL', 'n');   expect(displayText()).toBe('0.00')
+    await press(user, 'RCL', 'i');   expect(displayText()).toBe('0.00')
+    await press(user, 'RCL', 'PV');  expect(displayText()).toBe('0.00')
+    await press(user, 'RCL', 'PMT'); expect(displayText()).toBe('0.00')
+    await press(user, 'RCL', 'FV');  expect(displayText()).toBe('0.00')
+  })
+
+  test('RCL n, RCL i, RCL PV, RCL PMT, RCL FV inspect stored values without altering them', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D3', 'D6', 'D0', 'n')         // store 360 in n
+    await press(user, 'dot', 'D5', 'i')              // store 0.5 in i
+    await press(user, 'CLx')                          // wipe display
+    await press(user, 'RCL', 'n')
+    expect(displayText()).toBe('360.00')
+    await press(user, 'RCL', 'i')
+    expect(displayText()).toBe('0.50')
+    // Pressing PMT after RCL must not solve — there's a fresh value in X.
+    await press(user, 'D1', 'D0', 'D0', 'PMT')       // 100 PMT (store)
+    await press(user, 'RCL', 'PMT')
+    expect(displayText()).toBe('100.00')
+  })
+
+  test('f CLEAR PREFIX (f CLx) cancels a pending shift without zeroing X', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D4', 'D2')                    // X = 42
+    await press(user, 'f')                            // shift = f
+    await press(user, 'CLx')                          // f CLx → cancel prefix
+    // X must still be 42, not 0.
+    await press(user, 'ENTER')                        // commit
+    expect(displayText()).toBe('42.00')
+  })
+
+  test('STO PMT stores X into the PMT register', async () => {
+    const user = userEvent.setup()
+    render(<HP12C />)
+    await press(user, 'D5', 'D0', 'D0', 'STO', 'PMT')
+    await press(user, 'CLx')
+    await press(user, 'RCL', 'PMT')
+    expect(displayText()).toBe('500.00')
+  })
+})
